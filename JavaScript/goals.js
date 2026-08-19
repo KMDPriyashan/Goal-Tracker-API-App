@@ -1,7 +1,5 @@
 //start the developmenet 
 
-// js/goals.js
-
 // Load all goals
 async function loadAllGoals() {
     const userId = getUserId();
