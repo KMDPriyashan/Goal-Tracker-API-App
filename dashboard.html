@@ -120,6 +120,20 @@
     <script src="js/dashboard.js"></script>
     <script>
         
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        //welcome message with username
+        const user = getCurrentUser();
+        if(user){
+            document.getElementById('welcomeMessage').textContent = `welcome back, ${user.username || user.name || 'user'}! 🔥🔖`;
+        }
+
+        loadDashboard();
+        loadRecentActivity();
+
+
     </script>
 </body>
 </html>
