@@ -155,7 +155,51 @@
         }));
 
         //form submit
+        document.getElementById('goalForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const goalName = document.getElementById('goalName').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const targetDate = document.getElementById('targetDate').value;
 
+            if (!goalName || !targetDate) {
+                showAlert('danger', 'Please fill in all required fields');
+                return;
+            }
+
+            // Collect milestones
+            const milestoneItems = document.querySelectorAll('.milestone-item');
+            const milestones = [];
+            milestoneItems.forEach(item => {
+                const name = item.querySelector('.milestone-name').value.trim();
+                const dueDate = item.querySelector('.milestone-date').value;
+                if (name) {
+                    milestones.push({
+                        milestoneName: name,
+                        description: '',
+                        dueDate: dueDate || null
+                    });
+                }
+            });
+
+            if (milestones.length === 0) {
+                showAlert('danger', 'Please add at least one milestone');
+                return;
+            }
+
+            const goalData = {
+                userId: parseInt(getUserId()),
+                goalName: goalName,
+                description: description || '',
+                targetDate: targetDate + 'T00:00:00',
+                milestones: milestones
+            };
+
+            const result = await createGoal(goalData);
+            if (result && result.result === true) {
+                window.location.href = 'goals.html';
+            }
+        });
 
 
     </script>
