@@ -65,7 +65,39 @@
     <script src="js/auth.js"></script>
     <script src="js/reminders.js"></script>
     <script>
-        
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        document.getElementById('reminderDate').value = now.toISOString().slice(0, 16);
+
+        document.getElementById('reminderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const reminderText = document.getElementById('reminderText').value.trim();
+            const reminderDate = document.getElementById('reminderDate').value;
+
+            if (!reminderText || !reminderDate) {
+                showAlert('danger', 'Please fill in all fields');
+                return;
+            }
+
+            const reminderData = {
+                userId: parseInt(getUserId()),
+                reminderText: reminderText,
+                reminderDate: reminderDate + ':00'
+            };
+
+            const result = await createReminder(reminderData);
+            if (result && result.result === true) {
+                window.location.href = 'reminders.html';
+            }
+        });
+
+
+
     </script>
 </body>
 </html>
