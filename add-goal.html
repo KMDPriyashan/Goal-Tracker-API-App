@@ -139,9 +139,24 @@
                 }else{
                     showAlert('warning.. ', 'You need to ate leaset one milestone.');
                 }
-            })
+            });
 
-        })
+        });
+
+        //remove milestone (initial)
+        document.querySelectorAll('.remove-milestone'.forEach(btn => {
+            btn.addEventListener('click', function(){
+                if(document.querySelectorAll('.milestone-item').length > 1) {
+                    this.closest('.milestone-item').remove();
+                }else{
+                    showAlert('warning', 'You need at lease one milestone');
+                }
+            });
+        }));
+
+        //form submit
+
+
 
     </script>
 
