@@ -67,7 +67,17 @@
     <script src="js/goals.js"></script>
 
     <script>
-        
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+         loadAllGoals();
+
+         document.getElementById('searchGoal').addEventListener('input', function(){
+            filterGoals(this.value);
+         });
+         document.getElementById('filterStatus').addEventListener('change', function(){
+            filterGoals(document.getElementById('searchGoal').value, this.value);
+         });
     </script>
 
 </body>
