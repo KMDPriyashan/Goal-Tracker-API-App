@@ -73,7 +73,27 @@
     <script src="js/tasks.js"></script>
 
     <script>
-        
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        let showCompleted = true;
+
+        loadAllTasks();
+
+        document.getElementById('searchTask').addEventListener('input', function() {
+            filterTasks(this.value);
+        });
+
+        document.getElementById('filterFrequency').addEventListener('change', function() {
+            filterTasks(document.getElementById('searchTask').value, this.value);
+        });
+
+        document.getElementById('showCompleted').addEventListener('click', function() {
+            showCompleted = !showCompleted;
+            this.innerHTML = showCompleted ? '<i class="bi bi-eye"></i> Show All' : '<i class="bi bi-eye-slash"></i> Hide Completed';
+            filterTasks(document.getElementById('searchTask').value, document.getElementById('filterFrequency').value);
+        });
     </script>
     
 
