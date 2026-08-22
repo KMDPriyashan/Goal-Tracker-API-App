@@ -90,7 +90,51 @@
     <script src="js/auth.js"></script>
     <script src="js/tasks.js"></script>
     <script>
-        
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const taskId = urlParams.get('id');
+
+        if (!taskId) {
+            window.location.href = 'tasks.html';
+        }
+
+        loadTaskForEdit(taskId);
+
+        document.getElementById('editTaskForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const taskId = document.getElementById('taskId').value;
+            const taskName = document.getElementById('taskName').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const frequency = document.getElementById('frequency').value;
+            const startDate = document.getElementById('startDate').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const isCompleted = document.getElementById('isCompleted').checked;
+
+            if (!taskName) {
+                showAlert('danger', 'Please enter a task name');
+                return;
+            }
+
+            const taskData = {
+                id: parseInt(taskId),
+                userId: parseInt(getUserId()),
+                taskName: taskName,
+                description: description || '',
+                frequency: frequency,
+                startDate: startDate ? startDate + 'T00:00:00' : null,
+                dueDate: dueDate ? dueDate + 'T00:00:00' : null,
+                isCompleted: isCompleted
+            };
+
+            const result = await updateTask(taskId, taskData);
+            if (result && result.result === true) {
+                window.location.href = 'tasks.html';
+            }
+        });
     </script>
 </body>
 </html>
