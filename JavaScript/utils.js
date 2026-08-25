@@ -30,6 +30,19 @@ function logoutUser(){
     window.location.href = 'login.html';
 }
 
+function showAlert(type, message){
+    const alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) {
+        return;
+    }
+
+    alertContainer.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
+}
+
+function isLoggedIn(){
+    return getCurrentUser() !== null;
+}
+
 //check connection authentication status
 function checkAuth (){
     if(!isLoggedIn()){

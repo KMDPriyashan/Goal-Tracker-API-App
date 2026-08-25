@@ -18,7 +18,7 @@ function getCurrentUser (){
 }
 
 //get userid 
-function getUserID (){
+function getUserId (){
     const user = getCurrentUser();
     return user ? (user.id || user.userID) : null;
 }
