@@ -1,5 +1,5 @@
 //base url creation
-const API_base_url = 'https://localhost/api/GoalTracker';
+const API_BASE_URL = 'http://localhost:5500/api/GoalTracker';
 
 //common headers
 const headers = {
@@ -25,7 +25,7 @@ function getUserId (){
 
 //genatic api request function
 async function apiRequest(endpoint, method = 'GET', body = null){
-    const url = `${API_base_url}${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     const options = {
         method: method,
@@ -37,15 +37,30 @@ async function apiRequest(endpoint, method = 'GET', body = null){
     }
 
     try {
-        const responce = await fetch(url, options);
-        const data = await responce.json();
+        const response = await fetch(url, options);
+        const responseText = await response.text();
+        let data = {};
+
+        try {
+            data = responseText ? JSON.parse(responseText) : {};
+        } catch (error) {
+            data = {};
+        }
+
+        if (!response.ok) {
+            return {
+                result: false,
+                message: data.message || `API request failed (${response.status})`
+            };
+        }
+
         return data;
 
     } catch (error) {
         console.error('API request error', error);
         return {
-            Request: false,
-            message: 'Network error. Please check your connection..! '
+            result: false,
+            message: 'The API blocked this request. Enable CORS on the backend or serve this frontend from the same origin as the API.'
         };
         
     }
