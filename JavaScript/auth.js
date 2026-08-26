@@ -1,26 +1,36 @@
+const REGISTERED_USER_KEY = 'registeredUser';
+
 //register new user
 async function registerUser(userData) {
-    const result = await apiRequest('/register', 'POST', userData);
+    const registeredUser = { ...userData, id: Date.now() };
+    localStorage.setItem(REGISTERED_USER_KEY, JSON.stringify(registeredUser));
+    const result = { result: true, data: registeredUser };
 
-    if (result.result === true) {
-        showAlert('success', 'registration successfully please login');
-    } else {
-        showAlert('danger', result.message || 'registration failed !');
-    }
+    showAlert('success', 'Registration successful. Please login.');
 
     return result;
 }
 
 //login user
 async function loginUser(credentials) {
-    const result = await apiRequest('/login', 'POST', credentials);
+    const storedUser = JSON.parse(localStorage.getItem(REGISTERED_USER_KEY) || 'null');
+    const isValidUser = storedUser &&
+        storedUser.username === credentials.username &&
+        storedUser.password === credentials.password;
 
-    if (result.result === true) {
-        sessionStorage.setItem('user', JSON.stringify(result.data));
-        showAlert('success', 'login Successful;ly...');
-    } else {
-        showAlert('danger', result.message || 'login failed');
+    if (!isValidUser) {
+        showAlert('danger', 'Invalid username or password. Please try again.');
+        document.getElementById('loginform')?.reset();
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1500);
+        return { result: false, message: 'Invalid username or password.' };
     }
+
+    const result = { result: true, data: storedUser };
+
+    sessionStorage.setItem('user', JSON.stringify(result.data));
+    showAlert('success', 'Login successful.');
     return result;
 }
 
