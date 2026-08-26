@@ -6,25 +6,7 @@ async function loadAllReminders() {
         return;
     }
 
-    const result = await apiRequest(`/getReminders?userId=${userId}`);
-    
-    if (result.result === true && result.data) {
-        displayReminders(result.data);
-    } else {
-        const container = document.getElementById('remindersContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="empty-state">
-                        <div class="empty-icon">🔔</div>
-                        <h5>No reminders set</h5>
-                        <p class="text-muted">Set a reminder to never miss anything important!</p>
-                        <a href="add-reminder.html" class="btn btn-warning">Set Reminder</a>
-                    </div>
-                </div>
-            `;
-        }
-    }
+    displayReminders(readCollection('reminders').filter(reminder => reminder.userId === userId));
 }
 
 // Display reminders
@@ -77,14 +59,12 @@ function displayReminders(reminders) {
 
 // Create reminder
 async function createReminder(reminderData) {
-    const result = await apiRequest('/createReminder', 'POST', reminderData);
-    
-    if (result.result === true) {
-        showAlert('success', 'Reminder set successfully!');
-    } else {
-        showAlert('danger', result.message || 'Failed to set reminder!');
-    }
-    
+    const reminders = readCollection('reminders');
+    const reminder = { ...reminderData, id: Date.now() };
+    reminders.push(reminder);
+    writeCollection('reminders', reminders);
+    const result = localResult(reminder);
+    showAlert('success', 'Reminder set successfully!');
     return result;
 }
 
@@ -92,12 +72,8 @@ async function createReminder(reminderData) {
 async function deleteReminder(reminderId) {
     if (!confirmAction('Are you sure you want to delete this reminder?')) return;
 
-    const result = await apiRequest(`/deleteReminder/${reminderId}`, 'DELETE');
-    
-    if (result.result === true) {
-        showAlert('success', 'Reminder deleted successfully!');
-        loadAllReminders();
-    } else {
-        showAlert('danger', result.message || 'Failed to delete reminder!');
-    }
+    const reminders = readCollection('reminders').filter(reminder => String(reminder.id) !== String(reminderId));
+    writeCollection('reminders', reminders);
+    showAlert('success', 'Reminder deleted successfully!');
+    loadAllReminders();
 }

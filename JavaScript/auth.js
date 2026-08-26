@@ -37,6 +37,7 @@ async function loginUser(credentials) {
 //logout user
 function logoutUser() {
     sessionStorage.removeItem('user');
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
     window.location.href = 'login.html';
 }
 

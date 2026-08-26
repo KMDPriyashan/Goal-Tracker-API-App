@@ -6,6 +6,28 @@ const headers = {
     'Content-type': 'application/json'
 };
 
+const STORAGE_KEYS = {
+    goals: 'goals',
+    tasks: 'tasks',
+    reminders: 'reminders'
+};
+
+function readCollection(collection) {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS[collection]) || '[]');
+    } catch (error) {
+        return [];
+    }
+}
+
+function writeCollection(collection, items) {
+    localStorage.setItem(STORAGE_KEYS[collection], JSON.stringify(items));
+}
+
+function localResult(data) {
+    return { result: true, data: data };
+}
+
 //get stored userdata
 function getCurrentUser (){
     try{

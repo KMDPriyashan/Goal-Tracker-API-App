@@ -8,25 +8,7 @@ async function loadAllGoals() {
         return;
     }
 
-    const result = await apiRequest(`/getAllGoalsByUser?userId=${userId}`);
-    
-    if (result.result === true && result.data) {
-        displayGoals(result.data);
-    } else {
-        const container = document.getElementById('goalsContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <div class="empty-state">
-                        <div class="empty-icon">🎯</div>
-                        <h5>No goals found</h5>
-                        <p class="text-muted">Start by creating your first goal!</p>
-                        <a href="add-goal.html" class="btn btn-primary">Create Goal</a>
-                    </div>
-                </div>
-            `;
-        }
-    }
+    displayGoals(readCollection('goals').filter(goal => goal.userId === userId));
 }
 
 // Display goals
@@ -90,20 +72,19 @@ function displayGoals(goals) {
 
 // Create goal
 async function createGoal(goalData) {
-    const result = await apiRequest('/createGoalWithMilestones', 'POST', goalData);
-    
-    if (result.result === true) {
-        showAlert('success', 'Goal created successfully!');
-    } else {
-        showAlert('danger', result.message || 'Failed to create goal!');
-    }
-    
+    const goals = readCollection('goals');
+    const goal = { ...goalData, id: Date.now(), status: 'Active', completed: false };
+    goals.push(goal);
+    writeCollection('goals', goals);
+    const result = localResult(goal);
+    showAlert('success', 'Goal created successfully!');
     return result;
 }
 
 // Load goal for editing
 async function loadGoalForEdit(goalId) {
-    const result = await apiRequest(`/getGoal/${goalId}`);
+    const goal = readCollection('goals').find(item => String(item.id) === String(goalId));
+    const result = goal ? localResult(goal) : { result: false, message: 'Goal not found.' };
     
     if (result.result === true && result.data) {
         populateEditForm(result.data);
@@ -181,14 +162,13 @@ function populateEditForm(goal) {
 
 // Update goal
 async function updateGoal(goalId, goalData) {
-    const result = await apiRequest(`/updateGoalWithMilestones/${goalId}`, 'PUT', goalData);
-    
-    if (result.result === true) {
-        showAlert('success', 'Goal updated successfully!');
-    } else {
-        showAlert('danger', result.message || 'Failed to update goal!');
-    }
-    
+    const goals = readCollection('goals');
+    const index = goals.findIndex(goal => String(goal.id) === String(goalId));
+    if (index < 0) return { result: false, message: 'Goal not found.' };
+    goals[index] = { ...goals[index], ...goalData };
+    writeCollection('goals', goals);
+    const result = localResult(goals[index]);
+    showAlert('success', 'Goal updated successfully!');
     return result;
 }
 
@@ -196,19 +176,16 @@ async function updateGoal(goalId, goalData) {
 async function deleteGoal(goalId) {
     if (!confirmAction('Are you sure you want to delete this goal?')) return;
 
-    const result = await apiRequest(`/deleteGoal/${goalId}`, 'DELETE');
-    
-    if (result.result === true) {
-        showAlert('success', 'Goal deleted successfully!');
-        loadAllGoals();
-    } else {
-        showAlert('danger', result.message || 'Failed to delete goal!');
-    }
+    const goals = readCollection('goals').filter(goal => String(goal.id) !== String(goalId));
+    writeCollection('goals', goals);
+    showAlert('success', 'Goal deleted successfully!');
+    loadAllGoals();
 }
 
 // Load goal detail
 async function loadGoalDetail(goalId) {
-    const result = await apiRequest(`/getGoal/${goalId}`);
+    const goal = readCollection('goals').find(item => String(item.id) === String(goalId));
+    const result = goal ? localResult(goal) : { result: false, message: 'Goal not found.' };
     
     const container = document.getElementById('goalDetailContainer');
     

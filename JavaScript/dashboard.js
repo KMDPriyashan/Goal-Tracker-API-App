@@ -6,13 +6,14 @@ async function loadDashboard() {
         return;
     }
 
-    const result = await apiRequest(`/dashboard?userId=${userId}`);
-    
-    if (result.result === true && result.data) {
-        updateDashboardStats(result.data);
-    } else {
-        showAlert('danger', result.message || 'Failed to load dashboard data!');
-    }
+    const goals = readCollection('goals').filter(goal => goal.userId === userId);
+    const tasks = readCollection('tasks').filter(task => task.userId === userId);
+    updateDashboardStats({
+        totalGoals: goals.length,
+        completedGoals: goals.filter(goal => goal.completed || goal.status === 'Completed').length,
+        totalTasks: tasks.length,
+        pendingTasks: tasks.filter(task => !task.isCompleted).length
+    });
 }
 
 // Update dashboard statistics
@@ -37,12 +38,15 @@ async function loadRecentActivity() {
     const userId = getUserId();
     if (!userId) return;
 
-    const result = await apiRequest(`/recent-activity?userId=${userId}`);
-    
     const container = document.getElementById('activityContainer');
-    
-    if (result.result === true && result.data && result.data.length > 0) {
-        displayActivity(result.data, container);
+    const items = [
+        ...readCollection('goals').filter(item => item.userId === userId).map(item => ({ type: 'goal_created', description: `Goal: ${item.goalName}`, timestamp: item.createdAt || item.id })),
+        ...readCollection('tasks').filter(item => item.userId === userId).map(item => ({ type: 'task_created', description: `Task: ${item.taskName}`, timestamp: item.createdAt || item.id })),
+        ...readCollection('reminders').filter(item => item.userId === userId).map(item => ({ type: 'reminder_created', description: `Reminder: ${item.reminderText}`, timestamp: item.createdAt || item.id }))
+    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    if (items.length > 0) {
+        displayActivity(items, container);
     } else {
         container.innerHTML = `
             <div class="text-center text-muted py-4">

@@ -10,26 +10,8 @@ async function loadAllTasks() {
         return;
     }
 
-    const result = await apiRequest(`/getAllTasks?userId=${userId}`);
-    
-    if (result.result === true && result.data) {
-        allTasks = result.data;
-        displayTasks(allTasks);
-    } else {
-        const container = document.getElementById('tasksContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="empty-state">
-                        <div class="empty-icon">📋</div>
-                        <h5>No tasks found</h5>
-                        <p class="text-muted">Create your first task to stay organized!</p>
-                        <a href="add-task.html" class="btn btn-success">Create Task</a>
-                    </div>
-                </div>
-            `;
-        }
-    }
+    allTasks = readCollection('tasks').filter(task => task.userId === userId);
+    displayTasks(allTasks);
 }
 
 // Display tasks
@@ -88,20 +70,19 @@ function displayTasks(tasks) {
 
 // Create task
 async function createTask(taskData) {
-    const result = await apiRequest('/createTask', 'POST', taskData);
-    
-    if (result.result === true) {
-        showAlert('success', 'Task created successfully!');
-    } else {
-        showAlert('danger', result.message || 'Failed to create task!');
-    }
-    
+    const tasks = readCollection('tasks');
+    const task = { ...taskData, id: Date.now(), isCompleted: false };
+    tasks.push(task);
+    writeCollection('tasks', tasks);
+    const result = localResult(task);
+    showAlert('success', 'Task created successfully!');
     return result;
 }
 
 // Load task for editing
 async function loadTaskForEdit(taskId) {
-    const result = await apiRequest(`/getTask/${taskId}`);
+    const task = readCollection('tasks').find(item => String(item.id) === String(taskId));
+    const result = task ? localResult(task) : { result: false, message: 'Task not found.' };
     
     if (result.result === true && result.data) {
         const task = result.data;
@@ -124,14 +105,13 @@ async function loadTaskForEdit(taskId) {
 
 // Update task
 async function updateTask(taskId, taskData) {
-    const result = await apiRequest(`/updateTask/${taskId}`, 'PUT', taskData);
-    
-    if (result.result === true) {
-        showAlert('success', 'Task updated successfully!');
-    } else {
-        showAlert('danger', result.message || 'Failed to update task!');
-    }
-    
+    const tasks = readCollection('tasks');
+    const index = tasks.findIndex(task => String(task.id) === String(taskId));
+    if (index < 0) return { result: false, message: 'Task not found.' };
+    tasks[index] = { ...tasks[index], ...taskData };
+    writeCollection('tasks', tasks);
+    const result = localResult(tasks[index]);
+    showAlert('success', 'Task updated successfully!');
     return result;
 }
 
@@ -139,29 +119,21 @@ async function updateTask(taskId, taskData) {
 async function deleteTask(taskId) {
     if (!confirmAction('Are you sure you want to delete this task?')) return;
 
-    const result = await apiRequest(`/deleteTask/${taskId}`, 'DELETE');
-    
-    if (result.result === true) {
-        showAlert('success', 'Task deleted successfully!');
-        loadAllTasks();
-    } else {
-        showAlert('danger', result.message || 'Failed to delete task!');
-    }
+    const tasks = readCollection('tasks').filter(task => String(task.id) !== String(taskId));
+    writeCollection('tasks', tasks);
+    showAlert('success', 'Task deleted successfully!');
+    loadAllTasks();
 }
 
 // Mark task as complete
 async function markTaskComplete(taskId) {
-    const result = await apiRequest('/complete', 'POST', {
-        taskId: taskId,
-        userId: parseInt(getUserId())
-    });
-    
-    if (result.result === true) {
-        showAlert('success', 'Task marked as complete! 🎉');
-        loadAllTasks();
-    } else {
-        showAlert('danger', result.message || 'Failed to complete task!');
-    }
+    const tasks = readCollection('tasks');
+    const task = tasks.find(item => String(item.id) === String(taskId));
+    if (!task) return;
+    task.isCompleted = true;
+    writeCollection('tasks', tasks);
+    showAlert('success', 'Task marked as complete! 🎉');
+    loadAllTasks();
 }
 
 // Filter tasks
